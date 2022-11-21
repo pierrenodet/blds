@@ -1,6 +1,6 @@
 # Biquality Learning for Distribution Shift
 
-This repository provides a reference implementation of the algorithm described in the paper :
+This repository provides code to reproduce experiments conducted in this paper :
 
 [Biquality Learning: a Framework to Design Algorithms Dealing with Closed-Set Distribution Shifts]()
 
