@@ -171,8 +171,5 @@ dmypy.json
 
 #PROJECT 
 data/
-ncar/
-ncar-figures/
-nnar/
-nnar-figures/
-results/
+results*/
+datasets/
