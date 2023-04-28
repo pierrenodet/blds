@@ -13,7 +13,5 @@ git clone https://github.com/pierrenodet/blds.git
 cd blds
 tar -xf datasets.tar.gz
 python3 benchmark.py output/
-python3 benchmark_cluster.py output_cluster/
 python3 post_process.py output/results.csv output/stats.csv figures/
-python3 post_process_cluster.py output_cluster/results.csv output_cluster/stats.csv figures_cluster/
 ```

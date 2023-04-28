@@ -9,24 +9,36 @@ import warnings
 import numpy as np
 import pandas as pd
 import scipy.sparse as sp
-from bqlearn.baseline import BaselineBiqualityClassifier
-from bqlearn.corruptions import make_imbalance, make_label_noise
-from bqlearn.reweighting import IRBL, KKMM, KPDR
+from bqlearn.baseline import make_baseline
+from bqlearn.corruptions import make_imbalance, make_instance_dependent_label_noise
+from bqlearn.irbl import IRBL
+from bqlearn.kdr import KKMM, KPDR
 from pandas.core.frame import DataFrame
+from scipy import interpolate
 from scipy.stats import entropy
 from sklearn import clone
+from sklearn.calibration import CalibratedClassifierCV
 from sklearn.compose import make_column_selector, make_column_transformer
 from sklearn.datasets import fetch_openml
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import (accuracy_score, balanced_accuracy_score,
-                             cohen_kappa_score, log_loss)
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    cohen_kappa_score,
+    log_loss,
+    make_scorer,
+)
+from sklearn.model_selection import (
+    StratifiedShuffleSplit,
+    learning_curve,
+    train_test_split,
+)
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder, StandardScaler
-from sklearn.utils.extmath import softmax
+from sklearn.tree import DecisionTreeClassifier
 
-from covariate import IRBL2, PDR
+from covariate import IRBL2, KMM, PDR, find_best_kmeans, noisy_leaves_probability
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
@@ -34,60 +46,89 @@ if not sys.warnoptions:
 
 
 seed = 42
-base_clf = HistGradientBoostingClassifier(random_state=seed)
+base_clf = HistGradientBoostingClassifier(early_stopping=False, random_state=seed)
 
+cv = 5
 
 lr_classifiers = [
     (
         "irbl",
         IRBL(
-            base_estimator=base_clf,
+            base_estimator=CalibratedClassifierCV(
+                base_clf, method="isotonic", n_jobs=-1, cv=cv
+            ),
             final_estimator=base_clf,
         ),
     ),
     (
         "irbl2",
         IRBL2(
-            base_estimator=base_clf,
+            base_estimator=CalibratedClassifierCV(
+                base_clf, method="isotonic", n_jobs=-1, cv=cv
+            ),
+            covariate_estimator=CalibratedClassifierCV(
+                base_clf, method="isotonic", n_jobs=-1, cv=cv
+            ),
             final_estimator=base_clf,
         ),
     ),
     (
         "trusted_only",
-        BaselineBiqualityClassifier(estimator=base_clf, baseline="trusted_only"),
+        make_baseline(estimator=base_clf, baseline="trusted_only"),
     ),
     (
         "no_correction",
-        BaselineBiqualityClassifier(estimator=base_clf, baseline="no_correction"),
+        make_baseline(estimator=base_clf, baseline="no_correction"),
+    ),
+    (
+        "untrusted_only",
+        make_baseline(estimator=base_clf, baseline="untrusted_only"),
     ),
     (
         "kpdr",
-        KPDR(base_estimator=base_clf, n_jobs=8, final_estimator=base_clf),
+        KPDR(
+            base_estimator=CalibratedClassifierCV(
+                base_clf, method="isotonic", n_jobs=-1, cv=cv
+            ),
+            n_jobs=-1,
+            final_estimator=base_clf,
+        ),
     ),
     (
         "pdr",
-        PDR(base_estimator=base_clf, final_estimator=base_clf),
+        PDR(
+            base_estimator=CalibratedClassifierCV(
+                base_clf, method="isotonic", n_jobs=-1, cv=cv
+            ),
+            final_estimator=base_clf,
+        ),
     ),
     (
         "kkmm",
-        KKMM(kernel="rbf", batch_size=200, n_jobs=8, final_estimator=base_clf),
+        KKMM(
+            final_estimator=base_clf,
+            kernel="rbf",
+            batch_size=100,
+            max_iter=10000,
+            tol=1e-6,
+            n_jobs=-1,
+        ),
+    ),
+    (
+        "kmm",
+        KMM(
+            final_estimator=base_clf,
+            kernel="rbf",
+            batch_size=100,
+            max_iter=10000,
+            tol=1e-6,
+            n_jobs=-1,
+        ),
     ),
 ]
 
-
 binary_datasets = [
-    (
-        "ad",
-        fetch_openml(data_id=40978, return_X_y=True),
-    ),
-    ("eeg", fetch_openml(data_id=1471, return_X_y=True)),
-    (
-        "ibn_sina",
-        (
-            pd.read_csv("datasets/ibn-sina/train.csv", header=None, delimiter=" "),
-            pd.read_csv("datasets/ibn-sina/label.csv", header=None, delimiter=" "),
-        ),
-    ),
+    ("eeg", fetch_openml(data_id=1471, return_X_y=True, parser="pandas")),
     (
         "zebra",
         (
@@ -95,18 +136,25 @@ binary_datasets = [
             pd.read_csv("datasets/zebra/label.csv", header=None, delimiter=" "),
         ),
     ),
-    ("musk", fetch_openml(data_id=1116, return_X_y=True)),
-    (
-        "phishing",
-        fetch_openml(data_id=4534, return_X_y=True),
-    ),
-    ("spam", fetch_openml(data_id=44, return_X_y=True)),
+    ("musk", fetch_openml(data_id=1116, return_X_y=True, parser="pandas")),
+    ("phishing", fetch_openml(data_id=4534, return_X_y=True, parser="pandas")),
+    ("spam", fetch_openml(data_id=44, return_X_y=True, parser="pandas")),
     ("ijcnn1", fetch_openml(data_id=1575, return_X_y=True)),
-    ("diabetes", fetch_openml(data_id=37, return_X_y=True)),
-    (
-        "credit-g",
-        fetch_openml(data_id=31, return_X_y=True),
-    ),
+    ("diabetes", fetch_openml(data_id=37, return_X_y=True, parser="pandas")),
+    ("credit-g", fetch_openml(data_id=31, return_X_y=True, parser="pandas")),
+    ("svmguide3", fetch_openml(data_id=1589, return_X_y=True)),
+    ("web", fetch_openml(data_id=350, return_X_y=True)),
+    ("mushroom", fetch_openml(data_id=24, return_X_y=True, parser="pandas")),
+    ("skin-segmentation", fetch_openml(data_id=1502, return_X_y=True, parser="pandas")),
+    ("mozilla4", fetch_openml(data_id=1046, return_X_y=True, parser="pandas")),
+    ("electricity", fetch_openml(data_id=151, return_X_y=True, parser="pandas")),
+    ("bank-marketing", fetch_openml(data_id=1461, return_X_y=True, parser="pandas")),
+    ("magic-telescope", fetch_openml(data_id=1120, return_X_y=True, parser="pandas")),
+    ("phoeneme", fetch_openml(data_id=1489, return_X_y=True, parser="pandas")),
+    ("nomao", fetch_openml(data_id=1486, return_X_y=True, parser="pandas")),
+    ("click", fetch_openml(data_id=1220, return_X_y=True, parser="pandas")),
+    ("jm1", fetch_openml(data_id=1053, return_X_y=True, parser="pandas")),
+    ("poker", fetch_openml(data_id=354, return_X_y=True)),
     (
         "hiva",
         (
@@ -114,56 +162,47 @@ binary_datasets = [
             pd.read_csv("datasets/hiva/label.csv", header=None, delimiter=" "),
         ),
     ),
-    ("svmguide3", fetch_openml(data_id=1589, return_X_y=True)),
-    ("web", fetch_openml(data_id=350, return_X_y=True)),
     (
-        "mushroom",
-        fetch_openml(data_id=24, return_X_y=True),
+        "ibn-sina",
+        (
+            pd.read_csv("datasets/ibn-sina/train.csv", header=None, delimiter=" "),
+            pd.read_csv("datasets/ibn-sina/label.csv", header=None, delimiter=" "),
+        ),
     ),
-    ("skin-segmentation", fetch_openml(data_id=1502, return_X_y=True)),
-    ("mozilla4", fetch_openml(data_id=1046, return_X_y=True)),
-    ("electricity", fetch_openml(data_id=151, return_X_y=True)),
-    (
-        "bank-marketing",
-        fetch_openml(data_id=1461, return_X_y=True),
-    ),
-    ("magic-telescope", fetch_openml(data_id=1120, return_X_y=True)),
-    ("poker", fetch_openml(data_id=354, return_X_y=True)),
-    ("phoeneme", fetch_openml(data_id=1489, return_X_y=True)),
+    ("ad", fetch_openml(data_id=40978, return_X_y=True, parser="pandas")),
 ]
 
 multi_class_datasets = [
-    ("ldpa", fetch_openml(data_id=1483, return_X_y=True)),
-    ("letter", fetch_openml(data_id=6, return_X_y=True)),
-    ("pendigits", fetch_openml(data_id=32, return_X_y=True)),
-    ("har", fetch_openml(data_id=1478, return_X_y=True)),
-    ("japanese-vowels", fetch_openml(data_id=375, return_X_y=True)),
-    ("gas-drift", fetch_openml(data_id=1476, return_X_y=True)),
-    ("mnist", fetch_openml(data_id=554, return_X_y=True)),
+    ("pendigits", fetch_openml(data_id=32, return_X_y=True, parser="pandas")),
+    ("har", fetch_openml(data_id=1478, return_X_y=True, parser="pandas")),
+    ("japanese-vowels", fetch_openml(data_id=375, return_X_y=True, parser="pandas")),
+    ("gas-drift", fetch_openml(data_id=1476, return_X_y=True, parser="pandas")),
+    ("walking-activity", fetch_openml(data_id=1509, return_X_y=True, parser="pandas")),
+    ("connect-4", fetch_openml(data_id=40668, return_X_y=True, parser="pandas")),
+    ("satimage", fetch_openml(data_id=182, return_X_y=True, parser="pandas")),
     (
-        "covertype",
-        fetch_openml(data_id=150, return_X_y=True),
+        "usps",
+        fetch_openml(data_id=41082, return_X_y=True, as_frame=False, parser="pandas"),
     ),
-    ("walking-activity", fetch_openml(data_id=1509, return_X_y=True)),
+    ("dna", fetch_openml(data_id=40670, return_X_y=True, parser="pandas")),
+    ("isolet", fetch_openml(data_id=300, return_X_y=True, parser="pandas")),
     (
-        "connect-4",
-        fetch_openml(data_id=40668, return_X_y=True),
+        "first-ord-theorem-prov",
+        fetch_openml(data_id=1475, return_X_y=True, parser="pandas"),
     ),
-    ("satimage", fetch_openml(data_id=182, return_X_y=True)),
-    ("shuttle", fetch_openml(data_id=40685, return_X_y=True)),
-    ("usps", fetch_openml(data_id=41082, return_X_y=True, as_frame=False)),
     (
-        "dna",
-        fetch_openml(data_id=40670, return_X_y=True),
+        "artificial-characters",
+        fetch_openml(data_id=1459, return_X_y=True, parser="pandas"),
     ),
-    ("isolet", fetch_openml(data_id=300, return_X_y=True)),
-    ("first-order-theorem-proving", fetch_openml(data_id=1475, return_X_y=True)),
-    ("artificial-characters", fetch_openml(data_id=1459, return_X_y=True)),
+    ("splice", fetch_openml(data_id=46, return_X_y=True, parser="pandas")),
     (
-        "splice",
-        fetch_openml(data_id=46, return_X_y=True),
+        "spoken-arabic-digits",
+        fetch_openml(data_id=1503, return_X_y=True, parser="pandas"),
     ),
-    ("spoken-arabic-digits", fetch_openml(data_id=1503, return_X_y=True)),
+    ("ldpa", fetch_openml(data_id=1483, return_X_y=True, parser="pandas")),
+    ("mnist", fetch_openml(data_id=554, return_X_y=True, parser="pandas")),
+    ("covertype", fetch_openml(data_id=150, return_X_y=True, parser="pandas")),
+    ("letter", fetch_openml(data_id=6, return_X_y=True, parser="pandas")),
 ]
 
 parser = argparse.ArgumentParser()
@@ -171,38 +210,38 @@ parser = argparse.ArgumentParser()
 parser.add_argument("output_dir", help="output directory name", type=str)
 
 parser.add_argument(
-    "--p",
-    help="ratio of trusted data",
+    "--perc_total_perf",
+    help="ratio of trusted data given as a percentage of max performance",
     nargs="+",
     type=float,
-    default=[0.01, 0.02, 0.05],
+    default=[0.25, 0.5, 0.75],
 )
 parser.add_argument(
     "--q",
     help="corruption strength",
     nargs="+",
     type=float,
-    default=[0.0, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0],
+    default=[1.0, 0.9, 0.8, 0.7, 0.6, 0.5],
 )
 parser.add_argument(
     "--corruption",
     help="corruption kind",
     nargs="+",
     type=str,
-    default=["uniform"],
+    default=["permutation"],
 )
 parser.add_argument(
-    "--subsampling",
-    help="subsampling ratios",
+    "--cluster_imbalance",
+    help="cluster imbalance ratios",
     nargs="+",
     type=float,
-    default=[1, 10, 20, 50, 100, 200],
+    default=[1, 2, 5, 10, 20, 50, 100],
 )
 args = parser.parse_args()
 
-ps = args.p
-qs = args.q
-subsampling_ratios = args.subsampling
+perc_total_perfs = args.perc_total_perf
+qs = args.q[::-1]
+cluster_imbalance_ratios = args.cluster_imbalance
 corruptions = args.corruption
 
 stats = []
@@ -211,26 +250,26 @@ output_dir = args.output_dir
 os.makedirs(output_dir, exist_ok=True)
 
 for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
-
     X, y = bin_ds
 
     if sp.issparse(X):
-        X = X.todense()
+        X = X.toarray()
 
     if isinstance(y, np.ndarray) and np.issubdtype(y.dtype, np.number):
         y = y.astype(int)
     le = LabelEncoder().fit(y)
     y = le.transform(y)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, stratify=y, random_state=seed
+    n_samples, n_features = X.shape
+    classes = np.unique(y)
+    n_classes = len(classes)
+
+    X_train, X_test, y_train, y_test, train, test = train_test_split(
+        X, y, range(n_samples), test_size=0.3, stratify=y, random_state=seed
     )
 
-    n_samples, n_features = X.shape
-    n_classes = len(np.unique(y))
-
     if isinstance(X, DataFrame):
-
+        X = X.replace([np.inf, -np.inf], np.nan)
         X_train = X_train.replace([np.inf, -np.inf], np.nan)
         X_test = X_test.replace([np.inf, -np.inf], np.nan)
 
@@ -253,13 +292,15 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
             ),
         ).fit(X_train)
 
-        X_train = ct.transform(X_train)
-        X_test = ct.transform(X_test)
-
         n_categorical_features = len(categorical_features_selector(X))
         n_continous_features = len(continuous_features_selector(X))
 
+        X = ct.transform(X)
+        X_train = ct.transform(X_train)
+        X_test = ct.transform(X_test)
+
     else:
+        X = np.nan_to_num(X, nan=np.nan, neginf=np.nan, posinf=np.nan)
         X_train = np.nan_to_num(X_train, nan=np.nan, neginf=np.nan, posinf=np.nan)
         X_test = np.nan_to_num(X_test, nan=np.nan, neginf=np.nan, posinf=np.nan)
 
@@ -271,18 +312,16 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
     end = time.perf_counter()
 
     y_pred = total.predict(X_test)
-    y_score = total.decision_function(X_test)
-    if y_score.ndim == 1:
-        y_proba = np.c_[-y_score, y_score]
-    else:
-        y_proba = y_score
-    softmax(y_proba, copy=False)
-    y_proba = y_score
+    y_proba = total.predict_proba(X_test)
 
     total_acc = accuracy_score(y_test, y_pred)
     total_bacc = balanced_accuracy_score(y_test, y_pred, adjusted=True)
     total_kappa = cohen_kappa_score(y_test, y_pred)
     total_log_loss = log_loss(y_test, y_proba)
+
+    kmeans = find_best_kmeans(
+        X_train, y_train, n_clusters=[4, 8, 12], random_state=seed
+    )
 
     stat = {
         "name": bin_ds_name,
@@ -291,8 +330,9 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
         "n_categorical_features": n_categorical_features,
         "n_samples": n_samples,
         "n_classes": n_classes,
-        "minority_class_ratio": np.min(np.bincount(y)) / n_samples,
+        "minority_class_ratio": np.min(np.bincount(y)) / np.max(np.bincount(y)),
         "normalized_entropy": entropy(np.bincount(y)) / math.log(n_classes),
+        "n_clusters": list(map(lambda k_means: k_means.n_clusters, kmeans)),
         "total_acc": total_acc,
         "total_bacc": total_bacc,
         "total_kappa": total_kappa,
@@ -306,49 +346,100 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
             dict_writer.writeheader()
         dict_writer.writerow(stat)
 
-    for p in ps:
+    tree = DecisionTreeClassifier(min_samples_leaf=0.1 / n_classes, random_state=seed)
+    tree.fit(X_train, y_train)
 
-        X_trusted, X_untrusted, y_trusted, y_untrusted = train_test_split(
-            X_train, y_train, train_size=p, stratify=y_train, random_state=seed
-        )
+    train_sizes = np.array(
+        [1e-4, 5e-4, 0.001, 0.005, 0.01, 0.015, 0.02, 0.05, 0.1, 0.2, 0.4, 0.8, 1.0]
+    )
+    _, _, test_scores = learning_curve(
+        base_clf,
+        X,
+        y,
+        train_sizes=train_sizes,
+        shuffle=True,
+        random_state=seed,
+        scoring=make_scorer(cohen_kappa_score),
+        cv=[(train, test)],
+        n_jobs=-1,
+    )
 
-        for subsampling_ratio in subsampling_ratios:
+    test_scores = test_scores.ravel()
+    n_test_scores = len(test_scores)
+    print(f"test scores: {test_scores}")
+    max_perf = np.max(test_scores)
+    p = interpolate.interp1d(
+        test_scores, train_sizes[-n_test_scores:], fill_value="extrapolate"
+    )
 
-            X_subsampled, y_subsampled = make_imbalance(
-                X_untrusted,
-                y_untrusted,
-                majority_ratio=subsampling_ratio,
-                random_state=seed,
+    ps = [p(perc_total_perf * max_perf).item() for perc_total_perf in perc_total_perfs]
+
+    print(f"trusted data ratios: {ps}")
+
+    for p, perc_total_perf in zip(ps, perc_total_perfs):
+        trusted, untrusted = next(
+            StratifiedShuffleSplit(n_splits=1, train_size=p, random_state=seed).split(
+                X_train, y_train
             )
+        )
+        sample_quality = np.ones(X_train.shape[0])
+        sample_quality[untrusted] = 0
+
+        for cluster_imbalance_ratio in cluster_imbalance_ratios:
+            subsampled = []
+            for i in range(n_classes):
+                mask = y_train[untrusted] == i
+                _, subsampled_i = make_imbalance(
+                    kmeans[i].predict(X_train[untrusted][mask]),
+                    untrusted[mask],
+                    majority_ratio=cluster_imbalance_ratio,
+                    imbalance_distribution="step",
+                    random_state=seed,
+                )
+                subsampled.append(subsampled_i)
+
+            subsampled = np.hstack(subsampled)
+            selected = np.hstack((trusted, subsampled))
+
+            data_ratio = len(subsampled) / len(untrusted)
 
             for q in qs:
+                noise_prob = noisy_leaves_probability(
+                    X_train,
+                    tree,
+                    noise_ratio=1 - q,
+                    random=False,
+                    ascending=True,
+                    random_state=seed,
+                )
 
                 for corruption in corruptions:
+                    y_corrupted = np.copy(y_train)
 
-                    if corruption == "background" and q == 0:
-                        q = 0.05
-
-                    y_corrupted = make_label_noise(
-                        y_subsampled,
-                        noise_matrix=corruption,
-                        noise_ratio=1 - q,
+                    y_corrupted[untrusted] = make_instance_dependent_label_noise(
+                        noise_prob[untrusted],
+                        y_train[untrusted],
+                        corruption,
                         random_state=seed,
+                        labels=classes,
                     )
 
-                    for clf_name, clf in lr_classifiers:
+                    noise_ratio = np.mean(
+                        y_corrupted[subsampled] != y_train[subsampled]
+                    )
 
-                        model = clf.fit_biquality(
-                            X_trusted, y_trusted, X_subsampled, y_corrupted
+                    print(np.bincount(y_corrupted[trusted]))
+                    print(np.bincount(y_corrupted[subsampled]))
+
+                    for clf_name, clf in lr_classifiers:
+                        model = clf.fit(
+                            X_train[selected],
+                            y_corrupted[selected],
+                            sample_quality=sample_quality[selected],
                         )
 
                         y_pred = model.predict(X_test)
-                        y_score = model.decision_function(X_test)
-                        if y_score.ndim == 1:
-                            y_proba = np.c_[-y_score, y_score]
-                        else:
-                            y_proba = y_score
-                        softmax(y_proba, copy=False)
-                        y_proba = y_score
+                        y_proba = model.predict_proba(X_test)
 
                         acc = accuracy_score(y_test, y_pred)
                         bacc = balanced_accuracy_score(y_test, y_pred, adjusted=True)
@@ -357,14 +448,16 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
 
                         res = {
                             "ds": bin_ds_name,
-                            "p": p,
-                            "corruption": corruption,
+                            "p": round(p, 4),
+                            "perc_total_perf": perc_total_perf,
                             "q": q,
-                            "subsampling_ratio": subsampling_ratio,
-                            "acc": acc,
-                            "bacc": bacc,
-                            "kappa": kappa,
-                            "log_loss": logl,
+                            "cluster_imbalance_ratio": cluster_imbalance_ratio,
+                            "data_ratio": round(data_ratio, 4),
+                            "noise_ratio": round(noise_ratio, 2),
+                            "acc": round(acc, 4),
+                            "bacc": round(bacc, 4),
+                            "kappa": round(kappa, 4),
+                            "log_loss": round(logl, 4),
                             "clf": clf_name,
                         }
                         print(res)
