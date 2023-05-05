@@ -66,9 +66,7 @@ lr_classifiers = [
             base_estimator=CalibratedClassifierCV(
                 base_clf, method="isotonic", n_jobs=-1, cv=cv
             ),
-            covariate_estimator=CalibratedClassifierCV(
-                base_clf, method="isotonic", n_jobs=-1, cv=cv
-            ),
+            covariate_estimator=base_clf,
             final_estimator=base_clf,
         ),
     ),
@@ -87,9 +85,7 @@ lr_classifiers = [
     (
         "kpdr",
         KPDR(
-            base_estimator=CalibratedClassifierCV(
-                base_clf, method="isotonic", n_jobs=-1, cv=cv
-            ),
+            base_estimator=base_clf,
             n_jobs=-1,
             final_estimator=base_clf,
         ),
@@ -97,9 +93,7 @@ lr_classifiers = [
     (
         "pdr",
         PDR(
-            base_estimator=CalibratedClassifierCV(
-                base_clf, method="isotonic", n_jobs=-1, cv=cv
-            ),
+            base_estimator=base_clf,
             final_estimator=base_clf,
         ),
     ),
@@ -186,19 +180,6 @@ multi_class_datasets = [
     ),
     ("dna", fetch_openml(data_id=40670, return_X_y=True, parser="pandas")),
     ("isolet", fetch_openml(data_id=300, return_X_y=True, parser="pandas")),
-    (
-        "first-ord-theorem-prov",
-        fetch_openml(data_id=1475, return_X_y=True, parser="pandas"),
-    ),
-    (
-        "artificial-characters",
-        fetch_openml(data_id=1459, return_X_y=True, parser="pandas"),
-    ),
-    ("splice", fetch_openml(data_id=46, return_X_y=True, parser="pandas")),
-    (
-        "spoken-arabic-digits",
-        fetch_openml(data_id=1503, return_X_y=True, parser="pandas"),
-    ),
     ("ldpa", fetch_openml(data_id=1483, return_X_y=True, parser="pandas")),
     ("mnist", fetch_openml(data_id=554, return_X_y=True, parser="pandas")),
     ("covertype", fetch_openml(data_id=150, return_X_y=True, parser="pandas")),
@@ -214,7 +195,7 @@ parser.add_argument(
     help="ratio of trusted data given as a percentage of max performance",
     nargs="+",
     type=float,
-    default=[0.25, 0.5, 0.75],
+    default=[0.4, 0.6, 0.75],
 )
 parser.add_argument(
     "--q",
