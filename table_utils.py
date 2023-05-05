@@ -18,9 +18,7 @@ def results_to_latex(results, perf):
 
     return (
         rename_classifiers(results_formatted)
-        .rename_axis(
-            index=level_to_plevel
-        )
+        .rename_axis(index=level_to_plevel)
         .rename_axis("", axis=1)
         .style.format(precision=4)
         .format_index(precision=1, level="r")
@@ -35,24 +33,26 @@ def results_to_latex(results, perf):
     )
 
 
-def aggregated_results_to_latex(agg_results, perf):
+def aggregated_results_to_latex(agg_results, perf, std):
     formatted_results = pd.DataFrame(
         columns=agg_results.columns.get_level_values(0).unique(),
         index=agg_results.index.get_level_values(0),
     )
-    for col in agg_results.columns.get_level_values(0).unique():
-        formatted_results.loc[:, col] = (
-            agg_results.loc[:, (col, "mean")]
-            .astype(str)
-            .str.cat(agg_results.loc[:, (col, "std")].astype(str), sep=" $\\pm$ ")
-        )
+    if std:
+        for col in agg_results.columns.get_level_values(0).unique():
+            formatted_results.loc[:, col] = (
+                agg_results.loc[:, (col, "mean")]
+                .astype(str)
+                .str.cat(agg_results.loc[:, (col, "std")].astype(str), sep=" $\\pm$ ")
+            )
+    else:
+        for col in agg_results.columns.get_level_values(0).unique():
+            formatted_results.loc[:, col] = agg_results.loc[:, (col, "mean")].astype(str)
 
     return (
         rename_classifiers(formatted_results)
         .reset_index(names="p")
-        .rename_axis(
-            index=level_to_plevel
-        )
+        .rename_axis(index=level_to_plevel)
         .style.format(precision=2, subset="p")
         .hide(axis=0)
         .to_latex(

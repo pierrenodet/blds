@@ -100,7 +100,7 @@ def do(input, stats, output_path, competitors, datasets, level, args):
     )
 
     with open(os.path.join(output_path, "table.tex"), "w") as tf:
-        tf.write(aggregated_results_to_latex(input_table, args.perf))
+        tf.write(aggregated_results_to_latex(input_table, args.perf, args.std))
 
     with open(os.path.join(output_path, "mean.tex"), "w") as tf:
         tf.write(round(input_table.mean(), 2).to_latex())
@@ -288,6 +288,7 @@ def main():
     parser.add_argument(
         "--cross", help="generate cross-experiment figures", type=bool, default=True
     )
+    parser.add_argument("--std", help="add std in tables", type=bool, default=False)
 
     args = parser.parse_args()
 
