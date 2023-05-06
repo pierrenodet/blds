@@ -123,67 +123,67 @@ lr_classifiers = [
 
 binary_datasets = [
     ("eeg", fetch_openml(data_id=1471, return_X_y=True, parser="pandas")),
-    (
-        "zebra",
-        (
-            pd.read_csv("datasets/zebra/train.csv", header=None, delimiter=" "),
-            pd.read_csv("datasets/zebra/label.csv", header=None, delimiter=" "),
-        ),
-    ),
-    ("musk", fetch_openml(data_id=1116, return_X_y=True, parser="pandas")),
-    ("phishing", fetch_openml(data_id=4534, return_X_y=True, parser="pandas")),
-    ("spam", fetch_openml(data_id=44, return_X_y=True, parser="pandas")),
-    ("ijcnn1", fetch_openml(data_id=1575, return_X_y=True)),
-    ("diabetes", fetch_openml(data_id=37, return_X_y=True, parser="pandas")),
-    ("credit-g", fetch_openml(data_id=31, return_X_y=True, parser="pandas")),
-    ("svmguide3", fetch_openml(data_id=1589, return_X_y=True)),
-    ("web", fetch_openml(data_id=350, return_X_y=True)),
-    ("mushroom", fetch_openml(data_id=24, return_X_y=True, parser="pandas")),
-    ("skin-segmentation", fetch_openml(data_id=1502, return_X_y=True, parser="pandas")),
-    ("mozilla4", fetch_openml(data_id=1046, return_X_y=True, parser="pandas")),
-    ("electricity", fetch_openml(data_id=151, return_X_y=True, parser="pandas")),
-    ("bank-marketing", fetch_openml(data_id=1461, return_X_y=True, parser="pandas")),
-    ("magic-telescope", fetch_openml(data_id=1120, return_X_y=True, parser="pandas")),
-    ("phoeneme", fetch_openml(data_id=1489, return_X_y=True, parser="pandas")),
-    ("nomao", fetch_openml(data_id=1486, return_X_y=True, parser="pandas")),
-    ("click", fetch_openml(data_id=1220, return_X_y=True, parser="pandas")),
-    ("jm1", fetch_openml(data_id=1053, return_X_y=True, parser="pandas")),
-    ("poker", fetch_openml(data_id=354, return_X_y=True)),
-    (
-        "hiva",
-        (
-            pd.read_csv("datasets/hiva/train.csv", header=None, delimiter=" "),
-            pd.read_csv("datasets/hiva/label.csv", header=None, delimiter=" "),
-        ),
-    ),
-    (
-        "ibn-sina",
-        (
-            pd.read_csv("datasets/ibn-sina/train.csv", header=None, delimiter=" "),
-            pd.read_csv("datasets/ibn-sina/label.csv", header=None, delimiter=" "),
-        ),
-    ),
-    ("ad", fetch_openml(data_id=40978, return_X_y=True, parser="pandas")),
+    # (
+    #     "zebra",
+    #     (
+    #         pd.read_csv("datasets/zebra/train.csv", header=None, delimiter=" "),
+    #         pd.read_csv("datasets/zebra/label.csv", header=None, delimiter=" "),
+    #     ),
+    # ),
+    # ("musk", fetch_openml(data_id=1116, return_X_y=True, parser="pandas")),
+    # ("phishing", fetch_openml(data_id=4534, return_X_y=True, parser="pandas")),
+    # ("spam", fetch_openml(data_id=44, return_X_y=True, parser="pandas")),
+    # ("ijcnn1", fetch_openml(data_id=1575, return_X_y=True)),
+    # ("diabetes", fetch_openml(data_id=37, return_X_y=True, parser="pandas")),
+    # ("credit-g", fetch_openml(data_id=31, return_X_y=True, parser="pandas")),
+    # ("svmguide3", fetch_openml(data_id=1589, return_X_y=True)),
+    # ("web", fetch_openml(data_id=350, return_X_y=True)),
+    # ("mushroom", fetch_openml(data_id=24, return_X_y=True, parser="pandas")),
+    # ("skin-segmentation", fetch_openml(data_id=1502, return_X_y=True, parser="pandas")),
+    # ("mozilla4", fetch_openml(data_id=1046, return_X_y=True, parser="pandas")),
+    # ("electricity", fetch_openml(data_id=151, return_X_y=True, parser="pandas")),
+    # ("bank-marketing", fetch_openml(data_id=1461, return_X_y=True, parser="pandas")),
+    # ("magic-telescope", fetch_openml(data_id=1120, return_X_y=True, parser="pandas")),
+    # ("phoeneme", fetch_openml(data_id=1489, return_X_y=True, parser="pandas")),
+    # ("nomao", fetch_openml(data_id=1486, return_X_y=True, parser="pandas")),
+    # ("click", fetch_openml(data_id=1220, return_X_y=True, parser="pandas")),
+    # ("jm1", fetch_openml(data_id=1053, return_X_y=True, parser="pandas")),
+    # ("poker", fetch_openml(data_id=354, return_X_y=True)),
+    # (
+    #     "hiva",
+    #     (
+    #         pd.read_csv("datasets/hiva/train.csv", header=None, delimiter=" "),
+    #         pd.read_csv("datasets/hiva/label.csv", header=None, delimiter=" "),
+    #     ),
+    # ),
+    # (
+    #     "ibn-sina",
+    #     (
+    #         pd.read_csv("datasets/ibn-sina/train.csv", header=None, delimiter=" "),
+    #         pd.read_csv("datasets/ibn-sina/label.csv", header=None, delimiter=" "),
+    #     ),
+    # ),
+    # ("ad", fetch_openml(data_id=40978, return_X_y=True, parser="pandas")),
 ]
 
 multi_class_datasets = [
-    ("pendigits", fetch_openml(data_id=32, return_X_y=True, parser="pandas")),
-    ("har", fetch_openml(data_id=1478, return_X_y=True, parser="pandas")),
-    ("japanese-vowels", fetch_openml(data_id=375, return_X_y=True, parser="pandas")),
-    ("gas-drift", fetch_openml(data_id=1476, return_X_y=True, parser="pandas")),
-    ("walking-activity", fetch_openml(data_id=1509, return_X_y=True, parser="pandas")),
-    ("connect-4", fetch_openml(data_id=40668, return_X_y=True, parser="pandas")),
-    ("satimage", fetch_openml(data_id=182, return_X_y=True, parser="pandas")),
-    (
-        "usps",
-        fetch_openml(data_id=41082, return_X_y=True, as_frame=False, parser="pandas"),
-    ),
-    ("dna", fetch_openml(data_id=40670, return_X_y=True, parser="pandas")),
-    ("isolet", fetch_openml(data_id=300, return_X_y=True, parser="pandas")),
-    ("ldpa", fetch_openml(data_id=1483, return_X_y=True, parser="pandas")),
-    ("mnist", fetch_openml(data_id=554, return_X_y=True, parser="pandas")),
-    ("covertype", fetch_openml(data_id=150, return_X_y=True, parser="pandas")),
-    ("letter", fetch_openml(data_id=6, return_X_y=True, parser="pandas")),
+    # ("pendigits", fetch_openml(data_id=32, return_X_y=True, parser="pandas")),
+    # ("har", fetch_openml(data_id=1478, return_X_y=True, parser="pandas")),
+    # ("japanese-vowels", fetch_openml(data_id=375, return_X_y=True, parser="pandas")),
+    # ("gas-drift", fetch_openml(data_id=1476, return_X_y=True, parser="pandas")),
+    # ("walking-activity", fetch_openml(data_id=1509, return_X_y=True, parser="pandas")),
+    # ("connect-4", fetch_openml(data_id=40668, return_X_y=True, parser="pandas")),
+    # ("satimage", fetch_openml(data_id=182, return_X_y=True, parser="pandas")),
+    # (
+    #     "usps",
+    #     fetch_openml(data_id=41082, return_X_y=True, as_frame=False, parser="pandas"),
+    # ),
+    # ("dna", fetch_openml(data_id=40670, return_X_y=True, parser="pandas")),
+    # ("isolet", fetch_openml(data_id=300, return_X_y=True, parser="pandas")),
+    # ("ldpa", fetch_openml(data_id=1483, return_X_y=True, parser="pandas")),
+    # ("mnist", fetch_openml(data_id=554, return_X_y=True, parser="pandas")),
+    # ("covertype", fetch_openml(data_id=150, return_X_y=True, parser="pandas")),
+    # ("letter", fetch_openml(data_id=6, return_X_y=True, parser="pandas")),
 ]
 
 parser = argparse.ArgumentParser()
@@ -202,7 +202,7 @@ parser.add_argument(
     help="corruption strength",
     nargs="+",
     type=float,
-    default=[1.0, 0.9, 0.8, 0.7, 0.6, 0.5],
+    default=[1.0],
 )
 parser.add_argument(
     "--corruption",
@@ -211,18 +211,26 @@ parser.add_argument(
     type=str,
     default=["permutation"],
 )
+# parser.add_argument(
+#     "--cluster_imbalance",
+#     help="cluster imbalance ratios",
+#     nargs="+",
+#     type=float,
+#     default=[1, 2, 5, 10, 20, 50, 100],
+# )
 parser.add_argument(
-    "--cluster_imbalance",
-    help="cluster imbalance ratios",
+    "--cluster_split",
+    help="cluster split ratios",
     nargs="+",
     type=float,
-    default=[1, 2, 5, 10, 20, 50, 100],
+    default=[0.0, 0.3, 0.6, 1.0],
 )
 args = parser.parse_args()
 
 perc_total_perfs = args.perc_total_perf
 qs = args.q[::-1]
-cluster_imbalance_ratios = args.cluster_imbalance
+# cluster_imbalance_ratios = args.cluster_imbalance
+cluster_splits = args.cluster_split
 corruptions = args.corruption
 
 stats = []
@@ -245,14 +253,14 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
     classes = np.unique(y)
     n_classes = len(classes)
 
-    X_train, X_test, y_train, y_test, train, test = train_test_split(
-        X, y, range(n_samples), test_size=0.3, stratify=y, random_state=seed
-    )
+    # X_train, X_test, y_train, y_test, train, test = train_test_split(
+    #     X, y, range(n_samples), test_size=0.3, stratify=y, random_state=seed
+    # )
 
     if isinstance(X, DataFrame):
         X = X.replace([np.inf, -np.inf], np.nan)
-        X_train = X_train.replace([np.inf, -np.inf], np.nan)
-        X_test = X_test.replace([np.inf, -np.inf], np.nan)
+        # X_train = X_train.replace([np.inf, -np.inf], np.nan)
+        # X_test = X_test.replace([np.inf, -np.inf], np.nan)
 
         continuous_features_selector = make_column_selector(dtype_include=np.number)
         categorical_features_selector = make_column_selector(
@@ -262,7 +270,6 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
         ct = make_column_transformer(
             (
                 make_pipeline(
-                    StandardScaler(),
                     SimpleImputer(missing_values=np.nan, strategy="mean"),
                 ),
                 continuous_features_selector,
@@ -271,64 +278,62 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
                 OneHotEncoder(sparse=False, handle_unknown="ignore"),
                 categorical_features_selector,
             ),
-        ).fit(X_train)
+        ).fit(X)
 
         n_categorical_features = len(categorical_features_selector(X))
         n_continous_features = len(continuous_features_selector(X))
 
         X = ct.transform(X)
-        X_train = ct.transform(X_train)
-        X_test = ct.transform(X_test)
+        # X_train = ct.transform(X_train)
+        # X_test = ct.transform(X_test)
 
     else:
         X = np.nan_to_num(X, nan=np.nan, neginf=np.nan, posinf=np.nan)
-        X_train = np.nan_to_num(X_train, nan=np.nan, neginf=np.nan, posinf=np.nan)
-        X_test = np.nan_to_num(X_test, nan=np.nan, neginf=np.nan, posinf=np.nan)
+        # X_train = np.nan_to_num(X_train, nan=np.nan, neginf=np.nan, posinf=np.nan)
+        # X_test = np.nan_to_num(X_test, nan=np.nan, neginf=np.nan, posinf=np.nan)
 
         n_continous_features = n_features
         n_categorical_features = 0
 
-    start = time.perf_counter()
-    total = clone(base_clf).fit(X_train, y_train)
-    end = time.perf_counter()
+    # start = time.perf_counter()
+    # total = clone(base_clf).fit(X_train, y_train)
+    # end = time.perf_counter()
 
-    y_pred = total.predict(X_test)
-    y_proba = total.predict_proba(X_test)
+    # y_pred = total.predict(X_test)
+    # y_proba = total.predict_proba(X_test)
 
-    total_acc = accuracy_score(y_test, y_pred)
-    total_bacc = balanced_accuracy_score(y_test, y_pred, adjusted=True)
-    total_kappa = cohen_kappa_score(y_test, y_pred)
-    total_log_loss = log_loss(y_test, y_proba)
+    # total_acc = accuracy_score(y_test, y_pred)
+    # total_bacc = balanced_accuracy_score(y_test, y_pred, adjusted=True)
+    # total_kappa = cohen_kappa_score(y_test, y_pred)
+    # total_log_loss = log_loss(y_test, y_proba)
 
-    kmeans = find_best_kmeans(
-        X_train, y_train, n_clusters=[4, 8, 12], random_state=seed
-    )
+    kmeans = find_best_kmeans(X, y, n_clusters=[2], random_state=seed)
 
-    stat = {
-        "name": bin_ds_name,
-        "n_features": n_features,
-        "n_continous_features": n_continous_features,
-        "n_categorical_features": n_categorical_features,
-        "n_samples": n_samples,
-        "n_classes": n_classes,
-        "minority_class_ratio": np.min(np.bincount(y)) / np.max(np.bincount(y)),
-        "normalized_entropy": entropy(np.bincount(y)) / math.log(n_classes),
-        "n_clusters": list(map(lambda k_means: k_means.n_clusters, kmeans)),
-        "total_acc": total_acc,
-        "total_bacc": total_bacc,
-        "total_kappa": total_kappa,
-        "total_log_loss": total_log_loss,
-        "fit_time": end - start,
-    }
+    # stat = {
+    #     "name": bin_ds_name,
+    #     "n_features": n_features,
+    #     "n_continous_features": n_continous_features,
+    #     "n_categorical_features": n_categorical_features,
+    #     "n_samples": n_samples,
+    #     "n_classes": n_classes,
+    #     "minority_class_ratio": np.min(np.bincount(y)) / np.max(np.bincount(y)),
+    #     "normalized_entropy": entropy(np.bincount(y)) / math.log(n_classes),
+    #     "n_clusters": list(map(lambda k_means: k_means.n_clusters, kmeans)),
+    #     "total_acc": total_acc,
+    #     "total_bacc": total_bacc,
+    #     "total_kappa": total_kappa,
+    #     "total_log_loss": total_log_loss,
+    #     "fit_time": end - start,
+    # }
 
-    with open(os.path.join(output_dir, "stats.csv"), "a+", newline="") as output_file:
-        dict_writer = csv.DictWriter(output_file, stat.keys())
-        if not os.path.getsize(os.path.join(output_dir, "stats.csv")):
-            dict_writer.writeheader()
-        dict_writer.writerow(stat)
+    # with open(os.path.join(output_dir, "stats.csv"), "a+", newline="") as output_file:
+    #     dict_writer = csv.DictWriter(output_file, stat.keys())
+    #     if not os.path.getsize(os.path.join(output_dir, "stats.csv")):
+    #         dict_writer.writeheader()
+    #     dict_writer.writerow(stat)
 
     tree = DecisionTreeClassifier(min_samples_leaf=0.1 / n_classes, random_state=seed)
-    tree.fit(X_train, y_train)
+    tree.fit(X, y)
 
     train_sizes = np.array(
         [1e-4, 5e-4, 0.001, 0.005, 0.01, 0.015, 0.02, 0.05, 0.1, 0.2, 0.4, 0.8, 1.0]
@@ -338,12 +343,12 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
         X,
         y,
         train_sizes=train_sizes,
-        shuffle=True,
         random_state=seed,
         scoring=make_scorer(cohen_kappa_score),
-        cv=[(train, test)],
+        cv=10,
         n_jobs=-1,
     )
+    test_scores = test_scores.mean(axis=1)
 
     test_scores = test_scores.ravel()
     n_test_scores = len(test_scores)
@@ -358,35 +363,66 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
     print(f"trusted data ratios: {ps}")
 
     for p, perc_total_perf in zip(ps, perc_total_perfs):
-        trusted, untrusted = next(
-            StratifiedShuffleSplit(n_splits=1, train_size=p, random_state=seed).split(
-                X_train, y_train
-            )
-        )
-        sample_quality = np.ones(X_train.shape[0])
-        sample_quality[untrusted] = 0
-
-        for cluster_imbalance_ratio in cluster_imbalance_ratios:
-            subsampled = []
+        for cluster_split in cluster_splits:
+            trusted = []
+            untrusted = []
             for i in range(n_classes):
-                mask = y_train[untrusted] == i
-                _, subsampled_i = make_imbalance(
-                    kmeans[i].predict(X_train[untrusted][mask]),
-                    untrusted[mask],
-                    majority_ratio=cluster_imbalance_ratio,
-                    imbalance_distribution="step",
-                    random_state=seed,
+                mask = y == i
+                n_samples_i = mask.sum()
+                clusters = kmeans[i].predict(X[mask])
+                n_clusters = kmeans[i].n_clusters
+                sizes = np.bincount(clusters, minlength=n_clusters)
+                print(sizes)
+                probas = (
+                    (clusters == 1) * (cluster_split)
+                    + (1 - cluster_split) / n_clusters
                 )
-                subsampled.append(subsampled_i)
+                trusted.append(
+                    np.random.choice(
+                        np.arange(n_samples)[mask],
+                        size=int(0.3 * n_samples_i) + int(p * n_samples_i),
+                        replace=True,
+                        p=probas / probas.sum(),
+                    )
+                )
+                untrusted.append(
+                    np.random.choice(
+                        np.arange(n_samples)[mask],
+                        size=int(0.7 * n_samples_i),
+                        replace=True,
+                        p=(1 - probas) / (1 - probas).sum(),
+                    )
+                )
 
-            subsampled = np.hstack(subsampled)
-            selected = np.hstack((trusted, subsampled))
+            trusted = np.concatenate(trusted)
+            untrusted = np.concatenate(untrusted)
 
-            data_ratio = len(subsampled) / len(untrusted)
+            trusted, test = next(
+                StratifiedShuffleSplit(
+                    n_splits=1, train_size=int(p * n_samples), random_state=seed
+                ).split(X[trusted], y[trusted])
+            )
+
+            X_test, y_test = X[test], y[test]
+            X_train, y_train = (
+                X[np.hstack((trusted, untrusted))],
+                y[np.hstack((trusted, untrusted))],
+            )
+
+            print(
+                X_train.shape,
+                X_test.shape,
+                trusted.shape[0],
+                untrusted.shape[0],
+                n_samples,
+            )
+            sample_quality = np.hstack(
+                (np.ones(trusted.shape[0]), np.zeros(untrusted.shape[0]))
+            )
 
             for q in qs:
                 noise_prob = noisy_leaves_probability(
-                    X_train,
+                    X,
                     tree,
                     noise_ratio=1 - q,
                     random=False,
@@ -395,28 +431,26 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
                 )
 
                 for corruption in corruptions:
-                    y_corrupted = np.copy(y_train)
+                    y_corrupted = np.copy(y)
 
                     y_corrupted[untrusted] = make_instance_dependent_label_noise(
                         noise_prob[untrusted],
-                        y_train[untrusted],
+                        y[untrusted],
                         corruption,
                         random_state=seed,
                         labels=classes,
                     )
 
-                    noise_ratio = np.mean(
-                        y_corrupted[subsampled] != y_train[subsampled]
-                    )
-
-                    print(np.bincount(y_corrupted[trusted]))
-                    print(np.bincount(y_corrupted[subsampled]))
-
                     for clf_name, clf in lr_classifiers:
                         model = clf.fit(
-                            X_train[selected],
-                            y_corrupted[selected],
-                            sample_quality=sample_quality[selected],
+                            X[np.hstack((trusted, untrusted))],
+                            y_corrupted[np.hstack((trusted, untrusted))],
+                            sample_quality=np.hstack(
+                                (
+                                    np.ones(trusted.shape[0]),
+                                    np.zeros(untrusted.shape[0]),
+                                )
+                            ),
                         )
 
                         y_pred = model.predict(X_test)
@@ -432,9 +466,10 @@ for bin_ds_name, bin_ds in binary_datasets + multi_class_datasets:
                             "p": round(p, 4),
                             "perc_total_perf": perc_total_perf,
                             "q": q,
-                            "cluster_imbalance_ratio": cluster_imbalance_ratio,
-                            "data_ratio": round(data_ratio, 4),
-                            "noise_ratio": round(noise_ratio, 2),
+                            # "cluster_imbalance_ratio": cluster_imbalance_ratio,
+                            "cluster_split": cluster_split,
+                            # "data_ratio": round(data_ratio, 4),
+                            # "noise_ratio": round(noise_ratio, 2),
                             "acc": round(acc, 4),
                             "bacc": round(bacc, 4),
                             "kappa": round(kappa, 4),
